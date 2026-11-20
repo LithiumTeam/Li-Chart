@@ -1,6 +1,11 @@
+# Li-Chart : Render and Edit your csv data as a GUI object!
+# Fully Open-Source by MACsepehri
+# Organization Credit : Li-Team
+# Visit project on github : https://github.com/LithiumTeam/Li-Chart
 
 import tkinter as tk
 from tkinter import filedialog, messagebox
+import assets.render as render
 import shutil
 import os
 
@@ -12,12 +17,12 @@ class App(tk.Tk):
         self.geometry('800x500')
         self.resizable(False, False)
 
-        self.upload_button = tk.Button(
-            self,
-            text='Upload File',
-            command=self.upload_file
-        )
+        # upload/open files
+        self.upload_button = tk.Button(self, text='Upload File', command=self.upload_file)
         self.upload_button.place(relx=0.05,rely=0.05)
+
+        self.open_button = tk.Button(self, text='Open File', command=self.open_file)
+        self.open_button.place(relx=0.05,rely=0.15)
 
     def upload_file(self):
         file_path = filedialog.askopenfilename(
@@ -46,12 +51,23 @@ class App(tk.Tk):
             if not overwrite:
                 return
 
+            os.remove(destination)
+
         shutil.copy2(file_path, destination)
 
-        messagebox.showinfo(
-            'Success',
-            f'File saved successfully:\n{destination}'
+        render.run(destination)
+
+    def open_file(self):
+        file_path = filedialog.askopenfilename(
+            title='Select a file',
+            filetypes=[
+                ('CSV Files', '*.csv'),
+                ('Excel Files', '*.xlsx'),
+                ('All Files', '*.*')
+            ]
         )
+
+        render.run(file_path)
 
     def run(self):
         self.mainloop()
