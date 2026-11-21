@@ -1,4 +1,4 @@
-- 1 - Add a tool box to show pandas object, chaning data and kinda these works.
+- 1 - Add a tool box to show pandas object, chaning data and kinda these works. => DONE
 - 2 - Added a AI to ask anything about your data by user api key
 
 # Design Todo
