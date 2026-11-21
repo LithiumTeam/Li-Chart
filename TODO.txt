@@ -1,0 +1,5 @@
+- 1 - Add a tool box to show pandas object, chaning data and kinda these works.
+- 2 - Added a AI to ask anything about your data by user api key
+
+# Design Todo
+- 1 - Added a option for changing theme
