@@ -17,45 +17,12 @@ class App(tk.Tk):
         self.geometry('800x500')
         self.resizable(False, False)
 
-        # upload/open files
-        self.upload_button = tk.Button(self, text='Upload File', command=self.upload_file)
-        self.upload_button.place(relx=0.05,rely=0.05)
-
+        # open files
         self.open_button = tk.Button(self, text='Open File', command=self.open_file)
-        self.open_button.place(relx=0.05,rely=0.15)
+        self.open_button.place(relx=0.03,rely=0.03)
 
-    def upload_file(self):
-        file_path = filedialog.askopenfilename(
-            title='Select a file',
-            filetypes=[
-                ('CSV Files', '*.csv'),
-                ('Excel Files', '*.xlsx'),
-                ('All Files', '*.*')
-            ]
-        )
-
-        if not file_path:
-            return
-
-        os.makedirs('assets/data', exist_ok=True)
-
-        filename = os.path.basename(file_path)
-        destination = os.path.join('assets/data', filename)
-
-        if os.path.exists(destination):
-            overwrite = messagebox.askyesno(
-                'File Already Exists',
-                f'The file "{filename}" already exists.\nDo you want to replace it?'
-            )
-
-            if not overwrite:
-                return
-
-            os.remove(destination)
-
-        shutil.copy2(file_path, destination)
-
-        render.run(destination)
+        # text widgit initalization
+        tk.Label(self, text='Powered by Pandas | By Li-Team').place(relx=0.03,rely=self.winfo_height() - 0.1)
 
     def open_file(self):
         file_path = filedialog.askopenfilename(
@@ -67,7 +34,8 @@ class App(tk.Tk):
             ]
         )
 
-        render.run(file_path)
+        r = render.Render(file_path)
+        r.run()
 
     def run(self):
         self.mainloop()
