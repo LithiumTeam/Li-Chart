@@ -1,0 +1,6 @@
+
+{
+  "env.api.key": "I wouldn't public my agnes api key :)",
+  "env.base.api.url": "https://apihub.agnes-ai.com/v1",
+  "chat.history": []
+}
