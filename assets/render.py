@@ -6,7 +6,7 @@ import pandas as pd
 import threading
 import json
 import re
-
+import io, shutil
 
 def handle_valid_content_exception(file_path, root):
     try:
@@ -42,6 +42,10 @@ class Render(tk.Tk):
         )
         self.menu.add_command(
             label="AI Settings"
+        )
+
+        self.menu.add_command(
+            label="Fill blank data"
         )
 
         self.menu_button.config(menu=self.menu)
@@ -155,7 +159,7 @@ class Render(tk.Tk):
 
     def ai_request(self, prompt):
         try:
-            csv_context = self.data.head(30).to_csv(index=False)
+            csv_context = self.data.to_csv(index=False)
 
             messages = self.conversation + [
                 {
@@ -199,6 +203,26 @@ class Render(tk.Tk):
                 )
             )
 
+    def validate_ai_csv(self, new_csv_text, original_df):
+        try:
+            new_df = pd.read_csv(io.StringIO(new_csv_text))
+        except Exception as e:
+            messagebox.showerror('Invalid CSV', f'خروجی AI قابل خواندن نیست:\n\n{e}')
+            return None
+
+        if list(new_df.columns) != list(original_df.columns):
+            messagebox.showerror(
+                'CSV Structure Mismatch',
+                'ستون‌های خروجی AI با فایل اصلی یکی نیست.'
+            )
+            return None
+
+        if len(new_df) == 0:
+            messagebox.showerror('Empty CSV', 'خروجی AI خالیه و اعمال نمی‌شه.')
+            return None
+
+        return new_df
+
     def finish_ai_request(self, answer):
 
         match = re.search(
@@ -232,16 +256,31 @@ class Render(tk.Tk):
         self.aiScrolledText.see(tk.END)
         self.aiScrolledText.configure(state=tk.DISABLED)
 
-        if edit_confirmation != '':
+        if edit_confirmation:
+            new_df = self.validate_ai_csv(edit_confirmation, self.data)
+            if new_df is None:
+                self.ai_busy = False
+                self.ai_ask_button.config(state=tk.NORMAL)
+                return
+
+            try:
+                shutil.copy2(self.file_path, self.file_path + '.bak')
+            except Exception as e:
+                messagebox.showerror('Backup Failed', str(e))
+                return
+
+            try:
+                new_df.to_csv(self.file_path, index=False)
+            except Exception as e:
+                messagebox.showerror('Save Error', f'ذخیره نشد:\n\n{e}')
+                return
+
+            self.data = new_df
+
             self.scrolledText.configure(state=tk.NORMAL)
-            self.scrolledText.delete("1.0", tk.END)
-            self.scrolledText.insert(tk.END, edit_confirmation)
+            self.scrolledText.delete('1.0', tk.END)
+            self.scrolledText.insert(tk.END, new_df.to_csv(index=False))
             self.scrolledText.configure(state=tk.DISABLED)
-
-            with open(self.file_path,'w') as file:
-                file.write(edit_confirmation)
-
-            self.data = pd.read_csv(self.file_path)
 
         self.ai_busy = False
         self.ai_ask_button.config(state=tk.NORMAL)

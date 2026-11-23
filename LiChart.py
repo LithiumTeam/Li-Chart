@@ -27,7 +27,6 @@ class App(tk.Tk):
             title='Select a file',
             filetypes=[
                 ('CSV Files', '*.csv'),
-                ('Excel Files', '*.xlsx'),
                 ('All Files', '*.*')
             ]
         )
