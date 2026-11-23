@@ -232,10 +232,16 @@ class Render(tk.Tk):
         self.aiScrolledText.see(tk.END)
         self.aiScrolledText.configure(state=tk.DISABLED)
 
-        self.scrolledText.configure(state=tk.NORMAL)
-        self.scrolledText.delete("1.0", tk.END)
-        self.scrolledText.insert(tk.END, edit_confirmation)
-        self.scrolledText.configure(state=tk.DISABLED)
+        if edit_confirmation != '':
+            self.scrolledText.configure(state=tk.NORMAL)
+            self.scrolledText.delete("1.0", tk.END)
+            self.scrolledText.insert(tk.END, edit_confirmation)
+            self.scrolledText.configure(state=tk.DISABLED)
+
+            with open(self.file_path,'w') as file:
+                file.write(edit_confirmation)
+
+            self.data = pd.read_csv(self.file_path)
 
         self.ai_busy = False
         self.ai_ask_button.config(state=tk.NORMAL)
