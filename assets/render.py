@@ -5,6 +5,7 @@ import tkinter as tk
 import pandas as pd
 import threading
 import json
+import re
 
 
 def handle_valid_content_exception(file_path, root):
@@ -162,6 +163,7 @@ class Render(tk.Tk):
                     "content": (
                         f"CSV Data:\n{csv_context}\n\n"
                         f"Question: {prompt}"
+                        "If user wanted from you to edit you data, say your answer, then say :\nEDIT_CONFIRMATION='new_csv_data', Don't give user code just edit confirmation"
                     )
                 }
             ]
@@ -198,20 +200,42 @@ class Render(tk.Tk):
             )
 
     def finish_ai_request(self, answer):
-        self.aiScrolledText.configure(state=tk.NORMAL)
 
-        self.aiScrolledText.delete(
-            "end-3l",
-            "end-1l"
+        match = re.search(
+            r"EDIT_CONFIRMATION='(.*?)'",
+            answer,
+            re.DOTALL
         )
 
+        edit_confirmation = ''
+        text = answer
+
+        if match:
+            edit_confirmation = match.group(1)
+
+            text = answer.replace(match.group(0), '', 1)
+
+        # Convert literal \n into actual new lines, if necessary
+        text = text.replace('\\n', '\n')
+
+        self.aiScrolledText.configure(state=tk.NORMAL)
+
+        # Clear everything
+        self.aiScrolledText.delete("1.0", tk.END)
+
+        # Insert new content
         self.aiScrolledText.insert(
             tk.END,
-            f"AI: {answer}\n\n"
+            f"AI: {text.strip()}\n\n"
         )
 
         self.aiScrolledText.see(tk.END)
         self.aiScrolledText.configure(state=tk.DISABLED)
+
+        self.scrolledText.configure(state=tk.NORMAL)
+        self.scrolledText.delete("1.0", tk.END)
+        self.scrolledText.insert(tk.END, edit_confirmation)
+        self.scrolledText.configure(state=tk.DISABLED)
 
         self.ai_busy = False
         self.ai_ask_button.config(state=tk.NORMAL)
