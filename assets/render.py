@@ -7,6 +7,8 @@ import threading
 import json
 import re
 import io, shutil
+import subprocess
+import sys
 
 def handle_valid_content_exception(file_path, root):
     try:
@@ -35,10 +37,8 @@ class Render(tk.Tk):
         self.menu = tk.Menu(self.menu_button, tearoff=False)
 
         self.menu.add_command(
-            label="Show Pandas Object"
-        )
-        self.menu.add_command(
-            label="Use Pandas Functions"
+            label="Use Pandas Functions",
+            command=self.open_pandas_code_editor
         )
         self.menu.add_command(
             label="AI Settings"
@@ -85,6 +85,7 @@ class Render(tk.Tk):
 
             self.ai_base_url = data["env.base.api.url"]
             self.ai_api_key = data["env.api.key"]
+            self.model_name = data["model.name"]
 
             self.client = OpenAI(
                 api_key=self.ai_api_key,
@@ -111,6 +112,60 @@ class Render(tk.Tk):
         ]
 
         self.ai_busy = False
+
+
+
+    def open_pandas_code_editor(self):
+        def run():
+            user_code = code_input.get('1.0', tk.END).strip()
+            if not user_code:
+                return
+
+            # Wrap user code so `data` is preloaded
+            wrapped = (
+                "import pandas as pd\n"
+                f"data = pd.read_csv({self.file_path!r})\n"
+                "import io, sys\n"
+                "buf = io.StringIO()\n"
+                "_stdout = sys.stdout\n"
+                "sys.stdout = buf\n"
+                "try:\n"
+                f"    {user_code.replace(chr(10), chr(10) + '    ')}\n"
+                "finally:\n"
+                "    sys.stdout = _stdout\n"
+                "print(buf.getvalue())\n"
+            )
+
+            result = subprocess.run(
+                [sys.executable, "-c", wrapped],
+                capture_output=True,
+                text=True
+            )
+            out = result.stdout or ""
+            if result.stderr:
+                out += "\n--- stderr ---\n" + result.stderr
+
+            result_input.configure(state="normal")
+            result_input.delete("1.0", tk.END)
+            result_input.insert(tk.END, out)
+            result_input.configure(state="disabled")
+
+        win = tk.Tk()
+        win.geometry('400x300')
+        win.title('Pandas Code Editor')
+
+        code_input = ScrolledText(win,height=15)
+        code_input.place(relx=0.0,rely=0.0,width=200)
+        code_input.insert(tk.END, "# your data has been saved in 'data' variable.")
+
+        result_input = ScrolledText(win,height=15, state="disabled")
+        result_input.place(relx=0.5,rely=0.0,width=200)
+
+        run_button = tk.Button(win, text="Run", width=47, height=2, command=run,)
+        run_button.place(relx=0.0,rely=0.86)
+
+        win.mainloop()
+
 
     def save(self):
         with open(self.file_path, 'w', encoding='utf-8') as file:
@@ -173,7 +228,7 @@ class Render(tk.Tk):
             ]
 
             response = self.client.chat.completions.create(
-                model="agnes-2.5-flash",
+                model=self.model_name,
                 messages=messages
             )
 
@@ -207,18 +262,11 @@ class Render(tk.Tk):
         try:
             new_df = pd.read_csv(io.StringIO(new_csv_text))
         except Exception as e:
-            messagebox.showerror('Invalid CSV', f'خروجی AI قابل خواندن نیست:\n\n{e}')
-            return None
-
-        if list(new_df.columns) != list(original_df.columns):
-            messagebox.showerror(
-                'CSV Structure Mismatch',
-                'ستون‌های خروجی AI با فایل اصلی یکی نیست.'
-            )
+            messagebox.showerror('Invalid CSV', f'Cannot read ai answer:\n\n{e}')
             return None
 
         if len(new_df) == 0:
-            messagebox.showerror('Empty CSV', 'خروجی AI خالیه و اعمال نمی‌شه.')
+            messagebox.showerror('Empty CSV', 'AI result is empty')
             return None
 
         return new_df
@@ -277,10 +325,8 @@ class Render(tk.Tk):
 
             self.data = new_df
 
-            self.scrolledText.configure(state=tk.NORMAL)
             self.scrolledText.delete('1.0', tk.END)
             self.scrolledText.insert(tk.END, new_df.to_csv(index=False))
-            self.scrolledText.configure(state=tk.DISABLED)
 
         self.ai_busy = False
         self.ai_ask_button.config(state=tk.NORMAL)

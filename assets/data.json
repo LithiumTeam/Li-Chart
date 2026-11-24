@@ -1,6 +1,7 @@
 
 {
-  "env.api.key": "Your Agnes AI api key",
+  "env.api.key": "Your Agnes Ai api key",
   "env.base.api.url": "https://apihub.agnes-ai.com/v1",
+  "model.name": "agnes-2.5-flash",
   "chat.history": []
 }
