@@ -10,6 +10,8 @@ import io, shutil
 import subprocess
 import sys
 
+import assets.theme as theme
+
 def handle_valid_content_exception(file_path, root):
     try:
         pd.read_csv(file_path)
@@ -30,11 +32,14 @@ class Render(tk.Tk):
         self.title('Render Engine')
         self.geometry('800x300')
         self.resizable(False, False)
+        theme.apply(self)
 
         self.file_path = file_path
 
         self.menu_button = tk.Menubutton(self, text='Tools')
+        theme.button_style(self.menu_button)
         self.menu = tk.Menu(self.menu_button, tearoff=False)
+        self.menu.configure(bg=theme.BTN_BG, fg=theme.FG, activebackground=theme.ACCENT, activeforeground=theme.FG)
 
         self.menu.add_command(
             label="Use Pandas Functions",
@@ -59,26 +64,31 @@ class Render(tk.Tk):
 
         # Init
         self.scrolledText = ScrolledText(self, width=60)
+        theme.apply(self.scrolledText)
 
         self.save_button = tk.Button(
             self,
             text='Save',
             command=self.save
         )
+        theme.button_style(self.save_button)
 
         self.ai_ask_input_box = tk.Entry(self)
+        theme.apply(self.ai_ask_input_box)
 
         self.ai_ask_button = tk.Button(
             self,
             text='Ask',
             command=self.ask_ai
         )
+        theme.button_style(self.ai_ask_button)
 
         self.aiScrolledText = ScrolledText(
             self,
             width=36,
             wrap=tk.WORD
         )
+        theme.apply(self.aiScrolledText)
 
         # AI Settings
         try:
@@ -155,15 +165,19 @@ class Render(tk.Tk):
         win = tk.Tk()
         win.geometry('400x300')
         win.title('Pandas Code Editor')
+        theme.apply(win)
 
         code_input = ScrolledText(win,height=15)
+        theme.apply(code_input)
         code_input.place(relx=0.0,rely=0.0,width=200)
         code_input.insert(tk.END, "# your data has been saved in 'data' variable.")
 
         result_input = ScrolledText(win,height=15, state="disabled")
+        theme.apply(result_input)
         result_input.place(relx=0.5,rely=0.0,width=200)
 
         run_button = tk.Button(win, text="Run", width=47, height=2, command=run,)
+        theme.button_style(run_button)
         run_button.place(relx=0.0,rely=0.86)
 
         win.mainloop()
@@ -189,13 +203,16 @@ class Render(tk.Tk):
         win = tk.Tk()
         win.geometry('500x300')
         win.title('Ai settings')
+        theme.apply(win)
 
         json_data = open('./assets/data.json','r').read()
         json_scrolled_text = ScrolledText(win,height=15)
+        theme.apply(json_scrolled_text)
         json_scrolled_text.insert(tk.END, json_data)
         json_scrolled_text.place(relx=0.0,rely=0.0,width=500)
 
         save_button = tk.Button(win, text="Save", width=60, height=2, command=save)
+        theme.button_style(save_button)
         save_button.place(relx=0.0,rely=0.86)
 
         win.mainloop()
@@ -447,6 +464,8 @@ class Render(tk.Tk):
             rely=0.1
         )
 
-        tk.Label(self, text="Chatbot : use ai to fix your data easily", font=('Arial',14)).place(relx=0.62, rely=0.01)
+        chat_label = tk.Label(self, text="Chatbot : use ai to fix your data easily", font=('Arial',14))
+        theme.apply(chat_label)
+        chat_label.place(relx=0.62, rely=0.01)
 
         self.mainloop()
