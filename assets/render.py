@@ -46,7 +46,8 @@ class Render(tk.Tk):
         )
 
         self.menu.add_command(
-            label="Fill blank data"
+            label="Fill blank data",
+            command=self.fill_blank_data
         )
 
         self.menu_button.config(menu=self.menu)
@@ -198,6 +199,41 @@ class Render(tk.Tk):
         save_button.place(relx=0.0,rely=0.86)
 
         win.mainloop()
+
+
+
+    def fill_blank_data(self):
+        try:
+            # Read the latest CSV from ScrolledText
+            csv_text = self.scrolledText.get('1.0', tk.END)
+
+            self.data = pd.read_csv(io.StringIO(csv_text))
+
+            # Fill missing values
+            for column in self.data.columns:
+                if pd.api.types.is_numeric_dtype(self.data[column]):
+                    median = self.data[column].median()
+
+                    self.data[column] = self.data[column].fillna(
+                        median if pd.notna(median) else 0
+                    )
+                else:
+                    self.data[column] = self.data[column].fillna('Empty')
+
+            # Update ScrolledText
+            self.scrolledText.delete('1.0', tk.END)
+            self.scrolledText.insert(
+                tk.END,
+                self.data.to_csv(index=False)
+            )
+
+            # Save CSV
+            self.data.to_csv(self.file_path, index=False)
+
+        except Exception as e:
+            messagebox.showerror('Error', str(e))
+
+
 
 
     def save(self):
@@ -353,7 +389,7 @@ class Render(tk.Tk):
             try:
                 new_df.to_csv(self.file_path, index=False)
             except Exception as e:
-                messagebox.showerror('Save Error', f'ذخیره نشد:\n\n{e}')
+                messagebox.showerror('Save Error', f'Data did not save:\n\n{e}')
                 return
 
             self.data = new_df
@@ -410,5 +446,7 @@ class Render(tk.Tk):
             relx=0.0,
             rely=0.1
         )
+
+        tk.Label(self, text="Chatbot : use ai to fix your data easily", font=('Arial',14)).place(relx=0.62, rely=0.01)
 
         self.mainloop()
