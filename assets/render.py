@@ -41,7 +41,8 @@ class Render(tk.Tk):
             command=self.open_pandas_code_editor
         )
         self.menu.add_command(
-            label="AI Settings"
+            label="AI Settings",
+            command=self.open_ai_settings
         )
 
         self.menu.add_command(
@@ -163,6 +164,38 @@ class Render(tk.Tk):
 
         run_button = tk.Button(win, text="Run", width=47, height=2, command=run,)
         run_button.place(relx=0.0,rely=0.86)
+
+        win.mainloop()
+
+    def open_ai_settings(self):
+        def save():
+            new_data = json_scrolled_text.get("1.0", tk.END)
+            new_data = json.loads(new_data)
+            json.dump(new_data,open('./assets/data.json','w'), indent=4)
+
+            with open('./assets/data.json', 'r') as file:
+                data = json.load(file)
+
+            self.ai_base_url = data["env.base.api.url"]
+            self.ai_api_key = data["env.api.key"]
+            self.model_name = data["model.name"]
+
+            self.client = OpenAI(
+                api_key=self.ai_api_key,
+                base_url=self.ai_base_url
+            )
+
+        win = tk.Tk()
+        win.geometry('500x300')
+        win.title('Ai settings')
+
+        json_data = open('./assets/data.json','r').read()
+        json_scrolled_text = ScrolledText(win,height=15)
+        json_scrolled_text.insert(tk.END, json_data)
+        json_scrolled_text.place(relx=0.0,rely=0.0,width=500)
+
+        save_button = tk.Button(win, text="Save", width=60, height=2, command=save)
+        save_button.place(relx=0.0,rely=0.86)
 
         win.mainloop()
 
